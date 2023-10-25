@@ -3,9 +3,6 @@ from PIL import Image
 import io
 import cv2
 import numpy as np
-import img2pdf
-import base64
-import os
 
 # image array
 modified_images=[]
