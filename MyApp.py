@@ -39,18 +39,24 @@ def process_image(image):
     image=cv2.resize(image,(img_width,img_height))
     image_gray=cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
     image_blur=cv2.GaussianBlur(image_gray,(5,5),1)
-    image_canny=cv2.Canny(image_blur,100,200)
+    image_canny=cv2.Canny(image_blur,130,200)
     kernel=np.ones((3,3))
     image_closed=cv2.erode(cv2.dilate(image_canny,kernel,iterations=2),kernel, iterations=1)
     contours,hierarchy=cv2.findContours(image_closed,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
     biggest_contour,max_area=find_biggest_contour(contours)
     warped_image=image.copy()
-    # path_name="dummy.pdf"
-    # pil_images=None
     if biggest_contour.size!=0:
         final_points=np.float32([[img_width,0],[0,0],[0 ,img_height],[img_width,img_height]])
         perspective=cv2.getPerspectiveTransform(biggest_contour.astype(np.float32),final_points)
         warped_image=cv2.warpPerspective(image,perspective,(img_width,img_height))
+    
+    b, g, r = cv2.split(warped_image)
+    # applying adaptive to color channels
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    blue = clahe.apply(b)
+    green = clahe.apply(g)
+    red = clahe.apply(r)
+    warped_image = cv2.merge((blue, green, red))
     return warped_image
 
 def add_cover(text):
@@ -63,7 +69,6 @@ def add_cover(text):
    y=(img_height-max_height)//2
    x=max(x,0)
    y=max(y,0)
-#    todo add text to next line if it exceeds the image width
    cv2.putText(image_white,text,(x,y),font,fontScale,color,thickness,cv2.LINE_AA)
    return image_white
 
